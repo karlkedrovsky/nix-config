@@ -10,6 +10,8 @@
       ./hardware-configuration.nix
     ];
 
+  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
@@ -61,7 +63,7 @@
     isNormalUser = true;
     description = "Karl Kedrovsky";
     shell = pkgs.zsh;
-    extraGroups = [ "networkmanager" "wheel" ];
+    extraGroups = [ "networkmanager" "wheel" "lp" ];
   };
 
   users.users.root = {
@@ -75,6 +77,7 @@
   # You can use https://search.nixos.org/ to find more packages (and options).
   environment.systemPackages = with pkgs; [
     neovim
+    tree-sitter
     wget
     stow
     oh-my-posh
@@ -88,6 +91,29 @@
     tree-sitter
     fastfetch
     libreoffice
+    restic
+    herdr
+    bat
+    eza
+    zoxide
+    fzf
+    ripgrep
+    yazi
+    ffmpeg
+    jq
+    btop
+    direnv
+    nix-direnv
+    catppuccin-cursors.mochaMauve
+    catppuccin-cursors.mochaDark
+    (catppuccin-sddm.override {
+      flavor = "mocha";
+      accent = "mauve";
+  #    font  = "Noto Sans";
+  #    fontSize = "9";
+  #    background = "${./wallpaper.png}";
+  #    loginBackground = true;
+    })
   ];
 
   programs.git = {
@@ -123,6 +149,27 @@
   services.displayManager.sddm = {
     enable = true;
     wayland.enable = true;
+    theme = "catppuccin-mocha-mauve";
+  };
+
+  services.printing = {
+    enable = true;
+    drivers = with pkgs; [
+      foomatic-db
+      foomatic-db-nonfree
+      foomatic-filters
+      ghostscript
+      cups-filters
+  #    brlaser
+  #    brgenml1lpr
+  #    brgenml1cupswrapper
+    ];
+  };
+
+  services.avahi = {
+    enable = true;
+    nssmdns4 = true;
+    openFirewall = true;
   };
 
   # Open ports in the firewall.
