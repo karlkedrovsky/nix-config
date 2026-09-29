@@ -19,15 +19,13 @@
   # Use latest kernel.
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
-  networking.hostName = "bolivar"; # Define your hostname.
-  # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
-
-  # Configure network proxy if necessary
-  # networking.proxy.default = "http://user:password@proxy:port/";
-  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
-
-  # Enable networking
-  networking.networkmanager.enable = true;
+  # Networking
+  networking = {
+    hostName = "bolivar";
+    networkmanager.enable = true;
+    nameservers = [ "192.168.1.1" ];
+    search = [ "lab.kedrovsky.com" "lan.kedrovsky.com" "local" ];
+  };
 
   # Set your time zone.
   time.timeZone = "America/Chicago";
@@ -47,6 +45,9 @@
     LC_TIME = "en_US.UTF-8";
   };
 
+  # Allow sudo without a password for all users in the wheel group
+  security.sudo.wheelNeedsPassword = false;
+
   # Configure keymap in X11
   services.xserver.xkb = {
     layout = "us";
@@ -64,6 +65,7 @@
     description = "Karl Kedrovsky";
     shell = pkgs.zsh;
     extraGroups = [ "networkmanager" "wheel" "lp" ];
+    linger = true;
   };
 
   users.users.root = {
@@ -104,6 +106,7 @@
     btop
     direnv
     nix-direnv
+    restic
     catppuccin-cursors.mochaMauve
     catppuccin-cursors.mochaDark
     (catppuccin-sddm.override {
@@ -170,6 +173,30 @@
     enable = true;
     nssmdns4 = true;
     openFirewall = true;
+  };
+
+  # Backup
+  systemd.user.services.user-backup = {
+    enable = true;
+    wantedBy = [ "multi-user.target" ];
+    wants = [ "user-backup.timer" ];
+    description = "Backs up specific directories in my home directory";
+    unitConfig.ConditionUser = "karl";
+    path = [ pkgs.bash pkgs.coreutils pkgs.restic ];
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "/home/karl/bin/backup.sh";
+    };
+  };
+
+  systemd.user.timers.user-backup = {
+    enable = true;
+    wantedBy = [ "timers.target" ];
+    requires = [ "user-backup.service" ];
+    description = "Timer for user-backup.service";
+    timerConfig = {
+      OnCalendar = [ "*-*-* 23:00:00" ];
+    };
   };
 
   # Open ports in the firewall.
