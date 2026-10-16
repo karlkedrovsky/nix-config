@@ -2,12 +2,13 @@
 # your system. Help is available in the configuration.nix(5) man page, on
 # https://search.nixos.org/options and in the NixOS manual (`nixos-help`).
 
-{ config, pkgs, ... }:
+{ config, pkgs, inputs, ... }:
 
 {
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
+      inputs.nixvim.nixosModules.nixvim
     ];
 
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
@@ -45,6 +46,11 @@
     LC_TIME = "en_US.UTF-8";
   };
 
+  # Incus settings
+  virtualisation.incus.enable = true;
+  networking.nftables.enable = true;
+  networking.firewall.trustedInterfaces = [ "incusbr0" ];
+
   # Allow sudo without a password for all users in the wheel group
   security.sudo.wheelNeedsPassword = false;
 
@@ -64,7 +70,7 @@
     isNormalUser = true;
     description = "Karl Kedrovsky";
     shell = pkgs.zsh;
-    extraGroups = [ "networkmanager" "wheel" "lp" ];
+    extraGroups = [ "networkmanager" "wheel" "lp" "incus-admin" ];
     linger = true;
   };
 
@@ -78,7 +84,6 @@
   # List packages installed in system profile.
   # You can use https://search.nixos.org/ to find more packages (and options).
   environment.systemPackages = with pkgs; [
-    neovim
     tree-sitter
     wget
     stow
@@ -104,6 +109,8 @@
     ffmpeg
     jq
     btop
+    zip
+    unzip
     direnv
     nix-direnv
     restic
@@ -135,6 +142,32 @@
   programs.zsh.enable = true;
 
   programs.niri.enable = true;
+
+  programs.nixvim = {
+    enable = true;
+    globals.mapleader = " ";
+    opts = {
+      number = true;
+      relativenumber = true;
+      shiftwidth = 2;
+    };
+    colorschemes.catppuccin = { 
+      enable = true;
+      settings = {
+        flavour = "mocha";
+      };
+    };
+    plugins.lualine.enable = true;
+    plugins.lsp = {
+      enable = true;
+      servers = {
+        basedpyright.enable = true;
+	markdown_oxide.enable = true;
+	nixd.enable = true;
+	vtsls.enable = true;
+      };
+    };
+  };
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.

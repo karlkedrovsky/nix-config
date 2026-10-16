@@ -2,10 +2,11 @@
   description = "My system flake";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixvim.url = "github:nix-community/nixvim";
   };
 
-  outputs = { self, nixpkgs }:
+  outputs = { self, nixpkgs, nixvim, ... }@inputs :
   let
     system = "x86_64-linux";
     pkgs = import nixpkgs {
@@ -18,7 +19,7 @@
   {
   nixosConfigurations = {
     bolivar = nixpkgs.lib.nixosSystem {
-      specialArgs = { inherit system; };
+      specialArgs = { inherit inputs; };
       modules = [ ./configuration.nix ];
     };
   };
